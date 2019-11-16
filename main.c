@@ -29,8 +29,8 @@ typedef enum
 typedef enum
 {
     PREPARE_SUCCESS,
-    PREPARE_UNRECOGNIZED_STATEMENT,
-    PREPARE_SYNTAX_ERROR
+    PREPARE_SYNTAX_ERROR,
+    PREPARE_UNRECOGNIZED_STATEMENT
 } PrepareResult;
 
 typedef enum
@@ -195,16 +195,16 @@ void free_table(Table* table) {
     free(table);
 }
 
-void execute_statement(Statement* statement, Table* table) {
+ExecuteResult execute_statement(Statement* statement, Table* table) {
     switch(statement->type) {
         case (STATEMENT_INSERT):
             printf("This is where we would do an insert.\n");
             printf("> insert %d %s %s\n", statement->row_to_insert.id, statement->row_to_insert.username, statement->row_to_insert.email);
-            execute_insert(statement, table);
+            return execute_insert(statement, table);
             break;
         case (STATEMENT_SELECT):
             printf("This is where we would do a select.\n");
-            execute_select(statement, table);
+            return execute_select(statement, table);
             break;
     }
 }
@@ -243,6 +243,9 @@ int main(int argc, char* argv[]) {
         switch (prepare_statement(input_buffer, &statement)) {
             case (PREPARE_SUCCESS):
                 break;
+            case (PREPARE_SYNTAX_ERROR):
+                printf("Syntax error. Could not parse statement.\n");
+                continue;
             case (PREPARE_UNRECOGNIZED_STATEMENT):
                 printf("Unrecognized keyword at start of '%s'.\n", input_buffer->buffer);
                 continue;
@@ -250,7 +253,14 @@ int main(int argc, char* argv[]) {
                 break;
         }
 
-        execute_statement(&statement, table);
-        printf("Executed.\n");
+        switch (execute_statement(&statement, table)) {
+            case (EXECUTE_SUCCESS):
+                printf("Executed.\n");
+                break;
+            case (EXECUTE_ERROR):
+                printf("Error: Table full.\n");
+                break;
+                
+        }
     }
 }
