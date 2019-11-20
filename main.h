@@ -14,6 +14,14 @@
 #define PAGE_SIZE 4096
 #define TABLE_MAX_PAGES 100
 
+// 行
+typedef struct
+{
+    uint32_t id;
+    char username[COLUMN_USERNAME_SIZE + 1];
+    char email[COLUMN_EMAIL_SIZE + 1];
+} Row;
+
 // 输入缓存
 typedef struct
 {
@@ -22,7 +30,7 @@ typedef struct
     ssize_t input_length;
 } InputBuffer;
 
-// 元命令结果 
+// 元命令结果
 typedef enum
 {
     META_COMMAND_SUCCESS,
@@ -43,7 +51,7 @@ typedef enum
 typedef enum
 {
     STATEMENT_INSERT,
-    STATEMENT_SELECT  
+    STATEMENT_SELECT
 } StatementType;
 
 // 语句
@@ -57,23 +65,16 @@ typedef struct
 typedef struct
 {
     int file_descriptor;
-    uint32_t file_length; 
+    uint32_t file_length;
+    uint32_t num_pages;
     void* pages[TABLE_MAX_PAGES];
 } Pager;
-
-// 行
-typedef struct
-{
-    uint32_t id;
-    char username[COLUMN_USERNAME_SIZE + 1];
-    char email[COLUMN_EMAIL_SIZE + 1];
-} Row;
 
 // 表
 typedef struct
 {
     Pager *pager;
-    uint32_t num_rows;
+    uint32_t root_page_num;
 } Table;
 
 // 命令执行结果
@@ -86,7 +87,14 @@ typedef enum
 // 游标
 typedef struct
 {
-    Table *table;       // 只需要行数
-    uint32_t row_num;   // 游标
+    Table *table;       // 表的指针
+    uint32_t page_num;  // 第几页
+    uint32_t cell_num;  // 第几个单元
     bool end_of_table;  // 是否到表尾
 } Cursor;
+
+// 节点类型
+typedef enum {
+    node_internal,
+    node_leaf
+} NodeType;
