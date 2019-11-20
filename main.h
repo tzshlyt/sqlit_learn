@@ -14,13 +14,7 @@
 #define PAGE_SIZE 4096
 #define TABLE_MAX_PAGES 100
 
-typedef struct
-{
-    uint32_t id;
-    char username[COLUMN_USERNAME_SIZE + 1];
-    char email[COLUMN_EMAIL_SIZE + 1];
-} Row;
-
+// 输入缓存
 typedef struct
 {
     char* buffer;
@@ -28,12 +22,14 @@ typedef struct
     ssize_t input_length;
 } InputBuffer;
 
+// 元命令结果 
 typedef enum
 {
     META_COMMAND_SUCCESS,
     META_COMMAND_UNRECOGNIZED_COMMAND
 } MetaCommandResult;
 
+// 准备结果
 typedef enum
 {
     PREPARE_SUCCESS,
@@ -43,18 +39,21 @@ typedef enum
     PREPARE_UNRECOGNIZED_STATEMENT
 } PrepareResult;
 
+// 语句类型
 typedef enum
 {
     STATEMENT_INSERT,
-    STATEMENT_SELECT
+    STATEMENT_SELECT  
 } StatementType;
 
+// 语句
 typedef struct
 {
-    StatementType type;
-    Row row_to_insert;
+    StatementType type;  // 语句类型
+    Row row_to_insert;   // 插入行的结构
 } Statement;
 
+// 分页器
 typedef struct
 {
     int file_descriptor;
@@ -62,16 +61,32 @@ typedef struct
     void* pages[TABLE_MAX_PAGES];
 } Pager;
 
+// 行
+typedef struct
+{
+    uint32_t id;
+    char username[COLUMN_USERNAME_SIZE + 1];
+    char email[COLUMN_EMAIL_SIZE + 1];
+} Row;
+
+// 表
 typedef struct
 {
     Pager *pager;
     uint32_t num_rows;
 } Table;
 
+// 命令执行结果
 typedef enum
 {
     EXECUTE_SUCCESS,
     EXECUTE_ERROR
 } ExecuteResult;
 
-
+// 游标
+typedef struct
+{
+    Table *table;       // 只需要行数
+    uint32_t row_num;   // 游标
+    bool end_of_table;  // 是否到表尾
+} Cursor;
