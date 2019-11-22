@@ -1,2 +1,1 @@
-
-# learn sqlit
+# learn sqlite

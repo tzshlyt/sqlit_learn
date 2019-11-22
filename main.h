@@ -81,7 +81,8 @@ typedef struct
 typedef enum
 {
     EXECUTE_SUCCESS,
-    EXECUTE_ERROR
+    EXECUTE_ERROR,
+    EXECUTE_DUPLICATE_KEY
 } ExecuteResult;
 
 // 游标
@@ -95,6 +96,6 @@ typedef struct
 
 // 节点类型
 typedef enum {
-    node_internal,
-    node_leaf
+    NODE_INTERNAL,
+    NODE_LEAF
 } NodeType;
