@@ -104,6 +104,7 @@ uint32_t* internal_node_right_child(void* node);
 uint32_t* internal_node_num_keys(void* node);
 void indent(uint32_t level);
 void print_tree(Pager* pager, uint32_t page_num, uint32_t indentation_level);
+Cursor* internal_node_find(Table* table, uint32_t root_page_num, uint32_t key);
 
 
 // 创建输入缓存
@@ -364,8 +365,7 @@ Cursor* table_find(Table* table, uint32_t key)
         return leaf_node_find(table, root_page_num, key);
     }
     else {
-        printf("Need to implement searching an internal node\n");
-        exit(EXIT_FAILURE);
+        return internal_node_find(table, root_page_num, key);
     }
 
     return NULL;
@@ -405,6 +405,39 @@ Cursor* leaf_node_find(Table* table, uint32_t page_num, uint32_t key)
     cursor->cell_num = min_index;
     printf("leaf_node_find cursor page_num:%d cell_num:%d\n", page_num, min_index);
     return cursor;
+}
+
+Cursor* internal_node_find(Table* table, uint32_t page_num, uint32_t key)
+{
+    void* node = get_page(table->pager, page_num);
+    uint32_t num_keys = *internal_node_num_keys(node);
+    
+    uint32_t min_index = 0;
+    uint32_t max_index = num_keys; // 子节点比键多1
+    
+    while (min_index != max_index) {
+        uint32_t index = min_index + (max_index - min_index) / 2;
+        uint32_t key_to_right =  *internal_node_key(node, index);
+        if (key_to_right >= key) {
+            max_index = index;
+        } else {
+            min_index = index + 1;
+        }
+    }
+    uint32_t child_num = *internal_node_child(node, min_index);
+    void* child = get_page(table->pager, child_num);
+    switch (get_node_type(child)) {
+        case NODE_LEAF:
+            return leaf_node_find(table, child_num, key);
+            break;
+        case NODE_INTERNAL:
+            return internal_node_find(table, child_num, key);
+            break;
+        default:
+            break;
+    }
+    
+    return NULL;
 }
 
 // 打印数据
@@ -886,11 +919,11 @@ void create_new_root(Table* table, uint32_t right_child_page_num)
     // 根节点包含一个键和两个子节点
     initialize_internal_node(root);
     set_node_root(root, true);
-    *internal_node_num_keys(root) = 1;
-    *internal_node_child(root, 0) = left_child_page_num;
-    uint32_t left_child_max_key = get_node_max_key(left_child);
+    *internal_node_num_keys(root) = 1;  // 内部节点的键数为1
+    *internal_node_child(root, 0) = left_child_page_num;  // 左节点存入内部节点体的第一个位置
+    uint32_t left_child_max_key = get_node_max_key(left_child);  // 左节点最大键存入内部节点体的第一个位置
     *internal_node_key(root, 0) = left_child_max_key;
-    *internal_node_right_child(root) = right_child_page_num;
+    *internal_node_right_child(root) = right_child_page_num;  // 内部节点头部保存最右边的子节点
 }
 
 // 获取节点最大键值
